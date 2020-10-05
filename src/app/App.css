@@ -1,9 +1,16 @@
 .App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background-color: #edf6f6;
   padding-left: 1vw;
   padding-bottom: 1vh;
   padding-right: 1vw;
   padding-top: 1vh;
+}
+
+.header {
+  text-align: center;
 }
 
 .App-logo {
