@@ -10,6 +10,24 @@ function notEmpty(v: string): boolean {
 
 const  isValidEmail = email.validate;
 
+interface FormData {
+  firstName: string,
+  lastName: string;
+  email: string;
+  date: Date;
+}
+
+function postForm(data: FormData) {
+  return fetch('/api/postForm', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  .then((response) => response.json());
+}
+
 export default function Form() {
   const [ firstName, setFirstName ] = useState('');
   const [ lastName, setLastName ] = useState('');
@@ -17,15 +35,26 @@ export default function Form() {
   const [ date, setDate ] = useState<Date | undefined>(undefined);
   const [ formValid, setFormValid ] = useState(false);
 
+  // function resetForm() {
+  //   setFirstName('');
+  //   setLastName('');
+  //   setEmail('');
+  //   setDate(undefined);
+  // }
+
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const s = JSON.stringify({ firstName, lastName, email, date, formValid });
-    // console.log(s);
 
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setDate(undefined);
+    if (formValid === false || date === undefined) {
+      return;
+    }
+
+    const data: FormData = { firstName, lastName, email, date };
+
+    postForm(data)
+    .then((response) => {
+      console.log({response});
+    });
   }
 
   useEffect(() => {
@@ -37,14 +66,6 @@ export default function Form() {
     ].reduce((p, c) => p && c);
 
     setFormValid(valid);
-
-    // console.log({
-    //   firstName,
-    //   lastName,
-    //   email,
-    //   date,
-    //   formValid: valid,
-    // });
 
   }, [firstName, lastName, email, date]);
 
