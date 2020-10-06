@@ -4,7 +4,6 @@ import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 
-
 function notEmpty(v: string): boolean {
   return v !== ''
 }
@@ -21,7 +20,7 @@ export default function Form() {
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const s = JSON.stringify({ firstName, lastName, email, date, formValid });
-    console.log(s);
+    // console.log(s);
 
     setFirstName('');
     setLastName('');
@@ -39,13 +38,13 @@ export default function Form() {
 
     setFormValid(valid);
 
-    console.log({
-      firstName,
-      lastName,
-      email,
-      date,
-      formValid: valid,
-    });
+    // console.log({
+    //   firstName,
+    //   lastName,
+    //   email,
+    //   date,
+    //   formValid: valid,
+    // });
 
   }, [firstName, lastName, email, date]);
 
