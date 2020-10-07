@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
-import email from "email-validator";
-import DatePicker from "react-datepicker";
+import 'react-datepicker/dist/react-datepicker.css';
 
-import "react-datepicker/dist/react-datepicker.css";
+import email from 'email-validator';
+import React from 'react';
+import DatePicker from 'react-datepicker';
+import { useSelector } from 'react-redux';
 
-function notEmpty(v: string): boolean {
-  return v !== ''
-}
+import { RootState, useAppDispatch } from '../app/store';
+import { setDate, setEmail, setFirstName, setLastName, setMsg } from './formSlice';
 
-const  isValidEmail = email.validate;
+const isInvalidEmail = (v: string) => !email.validate(v);
 
-interface FormData {
+interface ValidFormData {
   firstName: string,
   lastName: string;
   email: string;
   date: Date;
 }
 
-function postForm(data: FormData) {
+function postForm(data: ValidFormData) {
   return fetch('/api/postForm', {
     method: 'POST',
     headers: {
@@ -29,45 +29,36 @@ function postForm(data: FormData) {
 }
 
 export default function Form() {
-  const [ firstName, setFirstName ] = useState('');
-  const [ lastName, setLastName ] = useState('');
-  const [ email, setEmail ] = useState('');
-  const [ date, setDate ] = useState<Date | undefined>(undefined);
-  const [ formValid, setFormValid ] = useState(false);
-
-  // function resetForm() {
-  //   setFirstName('');
-  //   setLastName('');
-  //   setEmail('');
-  //   setDate(undefined);
-  // }
+  const firstName = useSelector<RootState, string>((state) => state.form.firstName);
+  const lastName = useSelector<RootState, string>((state) => state.form.lastName);
+  const email = useSelector<RootState, string>((state) => state.form.email);
+  const date = useSelector<RootState, string>((state) => state.form.date);
+  const msg = useSelector<RootState, string>((state) => state.form.msg);
+  const dispatch = useAppDispatch();
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (formValid === false || date === undefined) {
+    // verify data
+    if (firstName === '' ||
+        lastName === '' ||
+        isInvalidEmail(email) ||
+        date === ''
+    ) {
       return;
     }
 
-    const data: FormData = { firstName, lastName, email, date };
-
-    postForm(data)
+    postForm({
+      firstName,
+      lastName,
+      email,
+      date: new Date(date),
+    })
     .then((response) => {
       console.log({response});
+      dispatch(setMsg(JSON.stringify(response)));
     });
   }
-
-  useEffect(() => {
-    const valid = [
-      notEmpty(firstName),
-      notEmpty(lastName),
-      isValidEmail(email),
-      date !== undefined
-    ].reduce((p, c) => p && c);
-
-    setFormValid(valid);
-
-  }, [firstName, lastName, email, date]);
 
   return (
     <form onSubmit={onSubmit}>
@@ -75,38 +66,53 @@ export default function Form() {
         <label>First name</label>
         <br/>
         <input
+          required
           type="text"
           value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          onChange={(e) => dispatch(setFirstName(e.target.value))}
         />
+        {/* <div>Please enter first name</div> */}
       </div>
       <div>
         <label>Last name</label>
         <br/>
         <input
+          required
           type="text"
           value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
+          onChange={(e) => dispatch(setLastName(e.target.value))}
         />
+        {/* <div>Please enter last name</div> */}
       </div>
       <div>
         <label>Email</label>
         <br/>
         <input
+          required
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => dispatch(setEmail(e.target.value))}
         />
+        {/* <div>Plese enter email address</div> */}
       </div>
       <div>
-        <label>Date</label>
+        <label>Event date</label>
         <br/>
         <DatePicker
-          selected={date}
-          onChange={(d: Date) => setDate(d)}
+          required={true}
+          selected={date === '' ? null : new Date(date)}
+          onChange={(d: Date | null) => {
+            if (d === null) {
+              dispatch(setDate(''));
+            } else {
+              dispatch(setDate(d.toISOString()))
+            }
+          }}
         />
       </div>
-      <button disabled={!formValid} type="submit" >Submit</button>
+      {/* <div>Plese enter event date</div> */}
+      <button type="submit">Submit</button>
+      {msg !== '' && <p>{msg}</p>}
     </form>
   );
 }

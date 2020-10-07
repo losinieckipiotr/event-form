@@ -90,7 +90,29 @@ MongoClient.connect(url, { useUnifiedTopology: true }, function(err, client) {
     })
   }
 
-  deleteSome();
+  function deleteEmpty() {
+    db.collection('forms').deleteMany({
+      firstName: null,
+    })
+    .then(function(result) {
+      console.log('deleted %s', result.deletedCount);
+      client.close();
+    });
+  }
+
+  function clearForms() {
+    db.collection('forms').deleteMany({})
+    .then(function(result) {
+      console.log('deleted %s', result.deletedCount);
+      client.close();
+    });
+  }
+
+  // clearForms();
+
+  // deleteEmpty();
+
+  // deleteSome();
 
   // modify();
 
