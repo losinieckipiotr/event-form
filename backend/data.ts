@@ -1,4 +1,5 @@
-const MongoClient = require('mongodb').MongoClient;
+// const MongoClient = require('mongodb').MongoClient;
+import { MongoClient } from 'mongodb';
 
 // NOT SAFE
 const pwd = '123456789';
@@ -6,7 +7,7 @@ const pwd = '123456789';
 // Connection URL
 const url = `mongodb://superuser:${pwd}@localhost:27017/admin`;
 
-function insertOne(firstName, lastName, email, date) {
+export function insertOne(firstName : string, lastName: string, email: string, date: Date) {
   return MongoClient.connect(url, { useUnifiedTopology: true })
   .then((client) => {
     // create databse
@@ -26,11 +27,7 @@ function insertOne(firstName, lastName, email, date) {
     }).finally(() => {
       client.close();
     });
-  }).catch((error) => {
+  }).catch((error: any) => {
     console.error('Unable to connect to database', error);
   });
 }
-
-module.exports = {
-  insertOne,
-};

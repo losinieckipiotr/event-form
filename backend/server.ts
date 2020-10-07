@@ -1,9 +1,9 @@
-const express = require('express');
-const path = require('path');
+import express from 'express';
+import  bodyParser from 'body-parser';
+import { insertOne } from './data';
+import { validate } from 'email-validator';
+
 const app = express();
-const bodyParser = require('body-parser');
-const { insertOne } = require('./data');
-const isValidEmail = require("email-validator").validate;
 
 // parse application/json
 app.use(bodyParser.json())
@@ -16,9 +16,11 @@ app.use(bodyParser.json())
 //   res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
 // });
 
-function notEmpty(v) {
+function notEmpty(v: string) {
   return v !== ''
 }
+
+const isValidEmail = validate;
 
 app.post('/api/postForm', function (req, res) {
   console.log('recived');
@@ -45,7 +47,7 @@ app.post('/api/postForm', function (req, res) {
     .then(() => {
       res.send(JSON.stringify({result: "OK" }));
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error(error);
       res.send(JSON.stringify({result: "ERROR"}));
     });
@@ -56,3 +58,4 @@ app.post('/api/postForm', function (req, res) {
 });
 
 app.listen(9000);
+
