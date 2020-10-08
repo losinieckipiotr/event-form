@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import Form from '../form/Form';
+import EventForm from '../form/EventForm';
 
 function App() {
   return (
@@ -8,7 +8,7 @@ function App() {
       <header className="header">
         <h1>Event Form</h1>
       </header>
-      <Form/>
+      <EventForm/>
      </div>
   );
 }

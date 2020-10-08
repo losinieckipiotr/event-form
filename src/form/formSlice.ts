@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction} from '@reduxjs/toolkit';
+import { RootState } from '../app/store';
 
-export interface FormState {
+interface FormState {
   firstName: string,
   lastName: string;
   email: string;
   date: string;
-  msg: string;
+  msg: string[];
 }
 
 const initialState: FormState = {
@@ -13,9 +14,8 @@ const initialState: FormState = {
   lastName: '',
   email: '',
   date: '',
-  msg: '',
+  msg: [],
 };
-
 
 export const slice  = createSlice({
   name: 'form',
@@ -34,11 +34,17 @@ export const slice  = createSlice({
       state.date = action.payload;
     },
     setMsg: (state, action: PayloadAction<string>) => {
-      state.msg = action.payload;
+      state.msg.push(action.payload);
     },
   },
 });
 
 export const { setFirstName, setLastName, setEmail, setDate, setMsg } = slice.actions;
+
+export const selectFirstName = (state: RootState) => state.form.firstName;
+export const selectLastName = (state: RootState) => state.form.lastName;
+export const selectEmail = (state: RootState) => state.form.email;
+export const selectDate = (state: RootState) => state.form.date;
+export const selectMsg = (state: RootState) => state.form.msg;
 
 export default slice.reducer;

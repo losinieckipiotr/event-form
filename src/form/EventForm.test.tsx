@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import From from './Form';
+import EventForm from './EventForm';
 
 it('Form renders without crashing', () => {
   const div = document.createElement('div');
-  ReactDOM.render(<From />, div);
+  ReactDOM.render(<EventForm />, div);
 });

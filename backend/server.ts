@@ -57,5 +57,8 @@ app.post('/api/postForm', function (req, res) {
   }
 });
 
-app.listen(9000);
+const port = 9000;
 
+app.listen(port);
+
+console.log('Backend is up, listening on port %s', port);
