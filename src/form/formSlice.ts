@@ -6,7 +6,7 @@ interface FormState {
   lastName: string;
   email: string;
   date: string;
-  msg: string[];
+  result: 'SUCCESS' | 'FAILURE' | undefined;
 }
 
 const initialState: FormState = {
@@ -14,7 +14,7 @@ const initialState: FormState = {
   lastName: '',
   email: '',
   date: '',
-  msg: [],
+  result: undefined,
 };
 
 export const slice  = createSlice({
@@ -33,18 +33,21 @@ export const slice  = createSlice({
     setDate: (state, action: PayloadAction<string>) => {
       state.date = action.payload;
     },
-    setMsg: (state, action: PayloadAction<string>) => {
-      state.msg.push(action.payload);
+    setSuccess: (state) => {
+      state.result = 'SUCCESS';
+    },
+    setFailure: (state) => {
+      state.result = 'FAILURE';
     },
   },
 });
 
-export const { setFirstName, setLastName, setEmail, setDate, setMsg } = slice.actions;
+export const { setFirstName, setLastName, setEmail, setDate, setSuccess, setFailure } = slice.actions;
 
 export const selectFirstName = (state: RootState) => state.form.firstName;
 export const selectLastName = (state: RootState) => state.form.lastName;
 export const selectEmail = (state: RootState) => state.form.email;
 export const selectDate = (state: RootState) => state.form.date;
-export const selectMsg = (state: RootState) => state.form.msg;
+export const selectResult = (state: RootState) => state.form.result;
 
 export default slice.reducer;

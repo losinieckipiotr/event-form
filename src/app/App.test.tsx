@@ -1,18 +1,14 @@
-// import React from 'react';
-// import { render } from '@testing-library/react';
-// import App from './App';
-
-// test('renders learn react link', () => {
-//   const { getByText } = render(<App />);
-//   const linkElement = getByText(/learn react/i);
-//   expect(linkElement).toBeInTheDocument();
-// });
+import '@testing-library/jest-dom/extend-expect';
+// import configureMockStore from 'redux-mock-store';
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 import App from './App';
+import '@testing-library/jest-dom'
+import 'jest-canvas-mock';
+import { render } from '@testing-library/react'
+import store from './store';
+import { Provider } from 'react-redux';
 
 it('App renders without crashing', () => {
-  const div = document.createElement('div');
-  ReactDOM.render(<App />, div);
+  render(<Provider store={store}><App/></Provider>);
 });

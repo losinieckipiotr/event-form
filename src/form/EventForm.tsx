@@ -10,12 +10,13 @@ import {
   selectEmail,
   selectFirstName,
   selectLastName,
-  selectMsg,
+  selectResult,
   setDate,
   setEmail,
   setFirstName,
   setLastName,
-  setMsg,
+  setSuccess,
+  setFailure,
 } from './formSlice';
 import Form from 'react-bootstrap/Form';
 import { Container } from 'react-bootstrap';
@@ -31,7 +32,7 @@ export default function EventForm() {
   const lastName = useSelector(selectLastName);
   const email = useSelector(selectEmail);
   const date = useSelector(selectDate);
-  const msg = useSelector(selectMsg);
+  const result = useSelector(selectResult);
   const dispatch = useAppDispatch();
 
   type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
@@ -40,7 +41,7 @@ export default function EventForm() {
   const onEmailChange = (e: InputChangeEvent) => dispatch(setEmail(e.target.value));
   const onDateChange = (d: Date | Date[] | null) => {
     if (d instanceof Date) {
-      dispatch(setDate(d.toISOString()))
+      dispatch(setDate(d.toJSON()))
     } else {
       dispatch(setDate(''))
     }
@@ -55,7 +56,9 @@ export default function EventForm() {
         isInvalidEmail(email) ||
         date === ''
     ) {
-      dispatch(setMsg('Invalid values in form'));
+      // FIXME
+      // client side verification, what is expected behaviour ?
+      // dispatch(setMsg('Invalid values in form'));
       return;
     }
 
@@ -65,9 +68,13 @@ export default function EventForm() {
       email,
       date: new Date(date),
     })
-    .then((response) => {
+    .then((_) => {
       // display response to user
-      dispatch(setMsg(JSON.stringify(response)));
+      dispatch(setSuccess());
+    }).catch((error) => {
+      // TODO test
+      console.warn(error);
+      dispatch(setFailure());
     });
   };
 
@@ -133,7 +140,9 @@ export default function EventForm() {
           <Col sm={2} xs={1}/>
         </Row>
       </Container>
-      {msg.map((m, i) => <div key={i.toString()}>{m}</div>)}
+      {result &&
+        <div>{result}</div>
+      }
     </>
   );
 }

@@ -45,14 +45,17 @@ app.post('/api/postForm', function (req, res) {
   if (valid) {
     insertOne(firstName, lastName, email, parsedDate)
     .then(() => {
+      res.contentType('application/json');
       res.send(JSON.stringify({result: "OK" }));
     })
     .catch((error: any) => {
       console.error(error);
+      res.contentType('application/json');
       res.send(JSON.stringify({result: "ERROR"}));
     });
   } else {
     console.error('Invalid data');
+    res.contentType('application/json');
     res.send(JSON.stringify({result: "INVALID DATA"}));
   }
 });
