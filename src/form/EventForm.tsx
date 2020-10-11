@@ -76,7 +76,6 @@ export default function EventForm() {
         dispatch(setFailure());
       }
     }).catch((error) => {
-      // TODO test
       console.error(error);
       dispatch(setFailure());
     });

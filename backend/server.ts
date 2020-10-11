@@ -1,7 +1,18 @@
-import express from 'express';
-import  bodyParser from 'body-parser';
-import { insertOne } from './data';
+import bodyParser from 'body-parser';
+import { config } from 'dotenv';
 import { validate } from 'email-validator';
+import express from 'express';
+import path from 'path';
+
+import { insertOne } from './data';
+
+const result = config();
+
+if (result.error) {
+  throw result.error
+}
+
+console.log('Config:', result.parsed);
 
 const app = express();
 
@@ -9,12 +20,9 @@ const app = express();
 app.use(bodyParser.json())
 
 // use in production
-// app.use(express.static(path.join(__dirname, '..', 'build')));
-
-// ?
-// app.get('/', function(req, res) {
-//   res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
-// });
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '..', 'build')));
+}
 
 function notEmpty(v: string) {
   return v !== ''
@@ -23,8 +31,7 @@ function notEmpty(v: string) {
 const isValidEmail = validate;
 
 app.post('/api/postForm', function (req, res) {
-  console.log('recived');
-  console.log(req.body);
+  console.log('request', req.body);
 
   const {
     firstName,
@@ -54,14 +61,18 @@ app.post('/api/postForm', function (req, res) {
       res.send(JSON.stringify({result: "ERROR"}));
     });
   } else {
-    console.error('Invalid data');
+    console.error('Invalid request');
     res.contentType('application/json');
-    res.send(JSON.stringify({result: "INVALID DATA"}));
+    res.send(JSON.stringify({result: "ERROR"}));
   }
 });
 
-const port = 9000;
+const port = Number(process.env.SERVER_PORT);
+
+if (isNaN(port)) {
+  throw new Error('Invalid SERVER_PORT');
+}
 
 app.listen(port);
 
-console.log('Backend is up, listening on port %s', port);
+console.log('Server is up, listening on port %s', port);

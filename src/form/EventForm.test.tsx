@@ -1,26 +1,44 @@
+import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/extend-expect';
 import 'jest-canvas-mock';
 
-import '@testing-library/jest-dom/extend-expect';
-
-import React from 'react';
-import '@testing-library/jest-dom'
-import { render, screen, fireEvent, waitFor, findByText  } from '@testing-library/react'
-import store from '../app/store';
-import { Provider } from 'react-redux';
-import EventForm from './EventForm';
+import { configureStore } from '@reduxjs/toolkit';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
+import { Provider } from 'react-redux';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import postForm, { FormData} from '../api/postForm';
+import postForm, { FormData } from '../api/postForm';
+import formReducer from '../form/formSlice';
+import EventForm from './EventForm';
 
 jest.mock('../api/postForm', () => ({
-  __esModule: true, // this property makes it work
+  __esModule: true,
   default : jest.fn(),
 }));
 
+const postFormMock = postForm as jest.Mock<Promise<{[key: string]: string}>, [FormData]>;
+
+afterEach(() => {
+  postFormMock.mockClear();
+});
+
+/* TODO use Custom Render
+ * examples:
+ *   https://testing-library.com/docs/react-testing-library/setup#custom-render
+ *   https://redux.js.org/recipes/writing-tests
+ */
 const renderEventFrom = () => {
-  const { container } = render(<Provider store={store}><EventForm/></Provider>);
-  return container;
+  // configure new store like in store.ts
+  // for each render to reset app state
+  const store = configureStore({
+    reducer: {
+      form: formReducer,
+    },
+  });
+  // render event form with store provider
+  const { container, debug } = render(<Provider store={store}><EventForm/></Provider>);
+  return { container, debug };
 };
 
 const testData = {
@@ -54,6 +72,11 @@ const typeTestData = (
     userEvent.type(emailInput, testData.email),
   ]);
 };
+
+// afterEach(() => {
+//   console.log('cleanup');
+//   cleanup();
+// });
 
 it('Event form inputs', async () => {
   renderEventFrom();
@@ -100,7 +123,7 @@ const getDateInputs = (container: HTMLElement) => {
 };
 
 it('Date picker - use mouse', async () => {
-  const container  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     dayInput,
@@ -182,7 +205,7 @@ const setTestDate = (
 };
 
 it('Date picker - use keyboard', async () => {
-  const container  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     dayInput,
@@ -198,7 +221,7 @@ it('Date picker - use keyboard', async () => {
 });
 
 it('success post', async () => {
-  const container  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -219,7 +242,6 @@ it('success post', async () => {
   const submitButton = screen.getByText('Submit') as HTMLButtonElement;
   expect(submitButton).toBeInstanceOf(HTMLButtonElement);
 
-  const postFormMock = postForm as jest.Mock<Promise<{[key: string]: string}>, [FormData]>;
   const resultOk = { 'result': 'OK' };
   postFormMock.mockResolvedValue(resultOk);
 
@@ -233,19 +255,15 @@ it('success post', async () => {
     email: 'jan.kowalski@gmail.com',
     date: testDateObj,
   };
-
   expect(postFormMock).toHaveBeenCalledWith(data);
-  expect(screen.getByText('SUCCESS')).toBeInTheDocument();
 
-  postFormMock.mockClear();
-
-  // return waitFor(() => {
-  //   return expect(screen.getByText('SUCCESS')).toBeInTheDocument();
-  // });
+  return waitFor(() => {
+    return expect(screen.getByText('SUCCESS')).toBeInTheDocument();
+  });
 });
 
-it('failure post', async () => {
-  const container  = renderEventFrom();
+it('failure post - invalid response', async () => {
+  const { container, debug }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -253,17 +271,17 @@ it('failure post', async () => {
     emailInput,
   } = getTextInputs();
 
-  await typeTestData(firstNameInput, lastNameInput, emailInput);
-
   const {
     dayInput,
     monthInput,
     yearInput,
   } = getDateInputs(container);
 
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
+  setTestDate(dayInput, monthInput, yearInput);
+
   const submitButton = screen.getByText('Submit') as HTMLButtonElement;
 
-  const postFormMock = postForm as jest.Mock<Promise<{[key: string]: string}>, [FormData]>;
   const resultOk = { 'result': 'ERROR' };
   postFormMock.mockResolvedValue(resultOk);
 
@@ -273,3 +291,253 @@ it('failure post', async () => {
   expect(screen.getByText('FAILURE')).toBeInTheDocument();
 });
 
+it('failure post - rejcted', async () => {
+  const { container }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
+  setTestDate(dayInput, monthInput, yearInput);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  postFormMock.mockRejectedValue(new Error('Test error'));
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(1);
+
+  return waitFor(() => {
+    return expect(screen.getByText('FAILURE')).toBeInTheDocument();
+  });
+});
+
+
+it('missing first name - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  await userEvent.type(lastNameInput, testData.lastName);
+  await userEvent.type(emailInput, testData.email);
+
+  setTestDate(dayInput, monthInput, yearInput);
+
+  expect(firstNameInput.value).toBe('');
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
+
+it('missing last name - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  await userEvent.type(firstNameInput, testData.firstName);
+  await userEvent.type(emailInput, testData.email);
+  setTestDate(dayInput, monthInput, yearInput);
+
+  expect(lastNameInput.value).toBe('');
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
+
+it('missing email - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  await userEvent.type(firstNameInput, testData.firstName);
+  await userEvent.type(lastNameInput, testData.lastName);
+  setTestDate(dayInput, monthInput, yearInput);
+
+  const postFormMock = postForm as jest.Mock<Promise<{[key: string]: string}>, [FormData]>;
+
+  expect(emailInput.value).toBe('');
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
+
+it('missing day - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
+  fireEvent.change(monthInput, { target: { value: testDate.month }});
+  fireEvent.change(yearInput, { target: { value: testDate.year }});
+
+  expect(dayInput.value).toBe('');
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
+
+it('missing month - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
+  fireEvent.change(dayInput, { target: { value: testDate.day }});
+  fireEvent.change(yearInput, { target: { value: testDate.year }});
+
+  expect(monthInput.value).toBe('');
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
+
+it('missing year - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
+  fireEvent.change(dayInput, { target: { value: testDate.day }});
+  fireEvent.change(monthInput, { target: { value: testDate.month }});
+
+  expect(yearInput.value).toBe('');
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
+
+it('invalid email address - post should not be called', async () => {
+  const { container, debug }  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+  const invalidEmail1 = 'Abc.example.com';
+
+  await userEvent.type(firstNameInput, testData.firstName);
+  await userEvent.type(lastNameInput, testData.lastName);
+  await userEvent.type(emailInput, invalidEmail1);
+  setTestDate(dayInput, monthInput, yearInput);
+
+  expect(emailInput.value).toBe(invalidEmail1);
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+
+  const invalidEmail2 = 'A@b@c@example.com';
+
+  await userEvent.type(emailInput, invalidEmail2);
+  expect(emailInput.value).toBe(invalidEmail2);
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+
+  const invalEmail3 = `this is"not\allowed@example.com`;
+
+  await userEvent.type(emailInput, invalEmail3);
+  expect(emailInput.value).toBe(invalEmail3);
+
+  fireEvent.click(submitButton);
+
+  expect(postFormMock).toHaveBeenCalledTimes(0);
+});
