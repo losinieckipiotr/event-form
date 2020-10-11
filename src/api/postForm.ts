@@ -6,7 +6,7 @@ export interface FormData {
 }
 
 
-export default function postForm(data: FormData): Promise<string> {
+export default function postForm(data: FormData): Promise<{[key: string]: string}> {
   const fetchWithTimeout = () => {
     return Promise.race<Promise<Response>>([
       fetch('/api/postForm', {
@@ -28,10 +28,9 @@ export default function postForm(data: FormData): Promise<string> {
   .then((response) => {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Invalid response');
+      console.error('Invalid response mime-type', response);
+      throw new Error('Invalid response mime-type');
     }
     return response.json();
-  }).then((r: any) => {
-    return JSON.stringify(r);
   });
 }

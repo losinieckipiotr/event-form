@@ -34,7 +34,7 @@ it('posts form', async () => {
   );
 
   const r = await postForm(testPostData);
-  expect(r).toBe(JSON.stringify(resultOk));
+  expect(r).toStrictEqual(resultOk);
 });
 
 it('posts proper data', async () => {
@@ -45,12 +45,11 @@ it('posts proper data', async () => {
     })
   );
 
-  const r = await postForm(testPostData);
-  const r2 = JSON.parse(r);
-  expect(r2.firstName).toBe(testPostData.firstName);
-  expect(r2.lastName).toBe(testPostData.lastName);
-  expect(r2.email).toBe(testPostData.email);
-  expect(r2.date).toBe(testPostData.date.toJSON());
+  const response = await postForm(testPostData);
+  expect(response['firstName']).toBe(testPostData.firstName);
+  expect(response['lastName']).toBe(testPostData.lastName);
+  expect(response['email']).toBe(testPostData.email);
+  expect(response['date']).toBe(testPostData.date.toJSON());
 });
 
 it('recives invalid content type', async () => {
@@ -61,7 +60,7 @@ it('recives invalid content type', async () => {
     })
   );
 
-  const invalidResponseError = new Error('Invalid response');
+  const invalidResponseError = new Error('Invalid response mime-type');
 
   await expect(postForm(testPostData)).rejects.toStrictEqual(invalidResponseError);
 });

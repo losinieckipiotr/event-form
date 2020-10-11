@@ -68,12 +68,16 @@ export default function EventForm() {
       email,
       date: new Date(date),
     })
-    .then((_) => {
-      // display response to user
-      dispatch(setSuccess());
+    .then((response) => {
+      if (response && response['result'] === 'OK') {
+        dispatch(setSuccess());
+      } else {
+        console.error('Invalid response', response);
+        dispatch(setFailure());
+      }
     }).catch((error) => {
       // TODO test
-      console.warn(error);
+      console.error(error);
       dispatch(setFailure());
     });
   };

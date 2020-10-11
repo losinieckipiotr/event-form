@@ -18,14 +18,51 @@ jest.mock('../api/postForm', () => ({
   default : jest.fn(),
 }));
 
-it('Event form inputs', async () => {
-  //render event form
-  render(<Provider store={store}><EventForm/></Provider>);
+const renderEventFrom = () => {
+  const { container } = render(<Provider store={store}><EventForm/></Provider>);
+  return container;
+};
 
-  // first name input should be rendered
+const testData = {
+  firstName: 'Jan',
+  lastName: 'Kowalski',
+  email: 'jan.kowalski@gmail.com',
+};
+
+const getTextInputs = () => {
+  // type conversion for typescript, this should be tested
   const firstNameInput = screen.getByPlaceholderText('Enter first name') as HTMLInputElement;
   const lastNameInput = screen.getByPlaceholderText('Enter last name') as HTMLInputElement;
   const emailInput = screen.getByPlaceholderText('Enter email') as HTMLInputElement;
+
+  return {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  };
+};
+
+const typeTestData = (
+  firstNameInput: HTMLInputElement,
+  lastNameInput: HTMLInputElement,
+  emailInput: HTMLInputElement,
+) => {
+
+  return Promise.all([
+    userEvent.type(firstNameInput, testData.firstName),
+    userEvent.type(lastNameInput, testData.lastName),
+    userEvent.type(emailInput, testData.email),
+  ]);
+};
+
+it('Event form inputs', async () => {
+  renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
 
   expect(firstNameInput).toBeInstanceOf(HTMLInputElement);
   expect(lastNameInput).toBeInstanceOf(HTMLInputElement);
@@ -35,27 +72,41 @@ it('Event form inputs', async () => {
   expect(lastNameInput.value).toBe('');
   expect(emailInput.value).toBe('');
 
-  await userEvent.type(firstNameInput, 'Jan');
-  await userEvent.type(lastNameInput, 'Kowalski');
-  await userEvent.type(emailInput, 'jan.kowalski@gmail.com');
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
 
-  expect(firstNameInput.value).toBe('Jan');
-  expect(lastNameInput.value).toBe('Kowalski');
-  expect(emailInput.value).toBe('jan.kowalski@gmail.com');
+  expect(firstNameInput.value).toBe(testData.firstName);
+  expect(lastNameInput.value).toBe(testData.lastName);
+  expect(emailInput.value).toBe(testData.email);
 });
 
-it('Date picker, set today by mouse', async () => {
-  const { container } = render(<Provider store={store}><EventForm/></Provider>);
-  const now = new Date();
-  const today = {
-    day: String(now.getDate()),
-    month: String(now.getMonth() + 1),
-    year: String(now.getFullYear()),
-  };
+const now = new Date();
+const today = {
+  day: String(now.getDate()),
+  month: String(now.getMonth() + 1),
+  year: String(now.getFullYear()),
+};
 
+const getDateInputs = (container: HTMLElement) => {
+  // type conversion for typescript, this should be tested
   const dayInput = container.querySelector('.react-date-picker__inputGroup__day') as HTMLInputElement;
   const monthInput = container.querySelector('.react-date-picker__inputGroup__month') as HTMLInputElement;
   const yearInput = container.querySelector('.react-date-picker__inputGroup__year') as HTMLInputElement;
+
+  return {
+    dayInput,
+    monthInput,
+    yearInput,
+  };
+};
+
+it('Date picker - use mouse', async () => {
+  const container  = renderEventFrom();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
 
   expect(dayInput).toBeInstanceOf(HTMLInputElement);
   expect(monthInput).toBeInstanceOf(HTMLInputElement);
@@ -105,76 +156,120 @@ it('Date picker, set today by mouse', async () => {
   expect(yearInput.value).toBe('');
 });
 
-it('Date picker, set day by keyboard', async () => {
-  const { container } = render(<Provider store={store}><EventForm/></Provider>);
+const testDate = {
+  day: '2',
+  month: '10',
+  year: '2020',
+};
 
-  const dayInput = container.querySelector('.react-date-picker__inputGroup__day') as HTMLInputElement;
-  const monthInput = container.querySelector('.react-date-picker__inputGroup__month') as HTMLInputElement;
-  const yearInput = container.querySelector('.react-date-picker__inputGroup__year') as HTMLInputElement;
+const testDateObj = new Date();
+testDateObj.setMilliseconds(0);
+testDateObj.setSeconds(0);
+testDateObj.setMinutes(0);
+testDateObj.setHours(0);
+testDateObj.setDate(Number(testDate.day));
+testDateObj.setMonth(Number(testDate.month) - 1);
+testDateObj.setFullYear(Number(testDate.year));
 
-  fireEvent.change(dayInput, { target: { value: '02' }});
-  fireEvent.change(monthInput, { target: { value: '12' }});
-  fireEvent.change(yearInput, { target: { value: '1993' }});
+const setTestDate = (
+  dayInput: HTMLInputElement,
+  monthInput: HTMLInputElement,
+  yearInput: HTMLInputElement,
+) => {
+  fireEvent.change(dayInput, { target: { value: testDate.day }});
+  fireEvent.change(monthInput, { target: { value: testDate.month }});
+  fireEvent.change(yearInput, { target: { value: testDate.year }});
+};
 
-  expect(dayInput.value).toBe('2');
-  expect(monthInput.value).toBe('12');
-  expect(yearInput.value).toBe('1993');
+it('Date picker - use keyboard', async () => {
+  const container  = renderEventFrom();
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  setTestDate(dayInput, monthInput, yearInput);
+
+  expect(dayInput.value).toBe(testDate.day);
+  expect(monthInput.value).toBe(testDate.month);
+  expect(yearInput.value).toBe(testDate.year);
 });
 
-it('success post test', async () => {
-  //render event form
-  const { container } = render(<Provider store={store}><EventForm/></Provider>);
+it('success post', async () => {
+  const container  = renderEventFrom();
 
-  // first name input should be rendered
-  const firstNameInput = screen.getByPlaceholderText('Enter first name') as HTMLInputElement;
-  const lastNameInput = screen.getByPlaceholderText('Enter last name') as HTMLInputElement;
-  const emailInput = screen.getByPlaceholderText('Enter email') as HTMLInputElement;
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
 
-  await Promise.all([
-    userEvent.type(firstNameInput, 'Jan'),
-    userEvent.type(lastNameInput, 'Kowalski'),
-    userEvent.type(emailInput, 'jan.kowalski@gmail.com'),
-  ]);
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
 
-  const dayInput = container.querySelector('.react-date-picker__inputGroup__day') as HTMLInputElement;
-  const monthInput = container.querySelector('.react-date-picker__inputGroup__month') as HTMLInputElement;
-  const yearInput = container.querySelector('.react-date-picker__inputGroup__year') as HTMLInputElement;
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
 
-  fireEvent.change(dayInput, { target: { value: '02' }});
-  fireEvent.change(monthInput, { target: { value: '12' }});
-  fireEvent.change(yearInput, { target: { value: '1993' }});
+  setTestDate(dayInput, monthInput, yearInput);
 
   const submitButton = screen.getByText('Submit') as HTMLButtonElement;
   expect(submitButton).toBeInstanceOf(HTMLButtonElement);
 
-  const postFormMock = postForm as jest.Mock<Promise<string>, [FormData]>;
-  const resultOk = JSON.stringify({ result: 'OK' });
+  const postFormMock = postForm as jest.Mock<Promise<{[key: string]: string}>, [FormData]>;
+  const resultOk = { 'result': 'OK' };
   postFormMock.mockResolvedValue(resultOk);
 
   fireEvent.click(submitButton);
 
   await expect(postFormMock).toHaveBeenCalledTimes(1);
 
-  const d = new Date();
-  d.setMilliseconds(0);
-  d.setSeconds(0);
-  d.setMinutes(0);
-  d.setHours(0);
-  d.setDate(2);
-  d.setMonth(11);
-  d.setFullYear(1993);
   const data: FormData = {
     firstName: 'Jan',
     lastName: 'Kowalski',
     email: 'jan.kowalski@gmail.com',
-    date: d,
+    date: testDateObj,
   };
 
   expect(postFormMock).toHaveBeenCalledWith(data);
   expect(screen.getByText('SUCCESS')).toBeInTheDocument();
 
+  postFormMock.mockClear();
+
   // return waitFor(() => {
   //   return expect(screen.getByText('SUCCESS')).toBeInTheDocument();
   // });
+});
+
+it('failure post', async () => {
+  const container  = renderEventFrom();
+
+  const {
+    firstNameInput,
+    lastNameInput,
+    emailInput,
+  } = getTextInputs();
+
+  await typeTestData(firstNameInput, lastNameInput, emailInput);
+
+  const {
+    dayInput,
+    monthInput,
+    yearInput,
+  } = getDateInputs(container);
+
+  const submitButton = screen.getByText('Submit') as HTMLButtonElement;
+
+  const postFormMock = postForm as jest.Mock<Promise<{[key: string]: string}>, [FormData]>;
+  const resultOk = { 'result': 'ERROR' };
+  postFormMock.mockResolvedValue(resultOk);
+
+  fireEvent.click(submitButton);
+
+  await expect(postFormMock).toHaveBeenCalledTimes(1);
+  expect(screen.getByText('FAILURE')).toBeInTheDocument();
 });
 
