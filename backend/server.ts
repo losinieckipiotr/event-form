@@ -4,7 +4,8 @@ import { validate } from 'email-validator';
 import express from 'express';
 import path from 'path';
 
-import { insertOne } from './data';
+// import { insertOne } from './data';
+import { insertOne } from './data2';
 
 const result = config();
 
