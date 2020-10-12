@@ -39,10 +39,27 @@ export const slice  = createSlice({
     setFailure: (state) => {
       state.result = 'FAILURE';
     },
+    closeModal: (state) => {
+      if (state.result === 'SUCCESS') {
+        state.firstName = '';
+        state.lastName = '';
+        state.email = '';
+        state.date ='';
+      }
+      state.result = undefined;
+    },
   },
 });
 
-export const { setFirstName, setLastName, setEmail, setDate, setSuccess, setFailure } = slice.actions;
+export const {
+  setFirstName,
+  setLastName,
+  setEmail,
+  setDate,
+  setSuccess,
+  setFailure,
+  closeModal,
+} = slice.actions;
 
 export const selectFirstName = (state: RootState) => state.form.firstName;
 export const selectLastName = (state: RootState) => state.form.lastName;

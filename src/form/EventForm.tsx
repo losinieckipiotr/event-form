@@ -15,9 +15,10 @@ import {
   setLastName,
   setSuccess,
   setFailure,
+  closeModal,
 } from './formSlice';
 import Form from 'react-bootstrap/Form';
-import { Container } from 'react-bootstrap';
+import { Container, Modal } from 'react-bootstrap';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
@@ -45,6 +46,8 @@ export default function EventForm() {
     }
   }
 
+  const onCloseModal = () => dispatch(closeModal());
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -54,9 +57,6 @@ export default function EventForm() {
         isInvalidEmail(email) ||
         date === ''
     ) {
-      // FIXME
-      // client side verification, what is expected behaviour ?
-      // dispatch(setMsg('Invalid values in form'));
       return;
     }
 
@@ -141,9 +141,17 @@ export default function EventForm() {
           <Col sm={2} xs={1}/>
         </Row>
       </Container>
-      {result &&
-        <div>{result}</div>
-      }
+      <Modal show={result !== undefined}>
+      <Modal.Body>{result === 'SUCCESS' ? 'Form saved successfully' : 'There was an error, sorry'}</Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="primary"
+            onClick={onCloseModal}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }

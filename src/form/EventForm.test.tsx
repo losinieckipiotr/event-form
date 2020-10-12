@@ -5,7 +5,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 
 import postForm, { FormData } from '../api/postForm';
-import formReducer from '../form/formSlice';
+import formReducer, { closeModal } from '../form/formSlice';
 import EventForm from './EventForm';
 
 jest.mock('../api/postForm', () => ({
@@ -253,13 +253,23 @@ it('success post', async () => {
   };
   expect(postFormMock).toHaveBeenCalledWith(data);
 
-  return waitFor(() => {
-    return expect(screen.getByText('SUCCESS')).toBeInTheDocument();
-  });
+  await waitFor(() => expect(screen.getByText('Form saved successfully')).toBeInTheDocument());
+
+  const closeModalButton = screen.getByText('Close') as HTMLButtonElement;
+  expect(closeModalButton).toBeInstanceOf(HTMLButtonElement);
+  fireEvent.click(closeModalButton);
+
+  expect(firstNameInput.value).toBe('');
+  expect(lastNameInput.value).toBe('');
+  expect(emailInput.value).toBe('');
+
+  expect(dayInput.value).toBe('');
+  expect(monthInput.value).toBe('');
+  expect(yearInput.value).toBe('');
 });
 
 it('failure post - invalid response', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -283,8 +293,21 @@ it('failure post - invalid response', async () => {
 
   fireEvent.click(submitButton);
 
-  await expect(postFormMock).toHaveBeenCalledTimes(1);
-  expect(screen.getByText('FAILURE')).toBeInTheDocument();
+  expect(postFormMock).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(screen.getByText('There was an error, sorry')).toBeInTheDocument());
+
+  const closeModalButton = screen.getByText('Close') as HTMLButtonElement;
+  expect(closeModalButton).toBeInstanceOf(HTMLButtonElement);
+  fireEvent.click(closeModalButton);
+
+  // do not clear, user may try send form again
+  expect(firstNameInput.value).toBe(testData.firstName);
+  expect(lastNameInput.value).toBe(testData.lastName);
+  expect(emailInput.value).toBe(testData.email);
+
+  expect(dayInput.value).toBe(testDate.day);
+  expect(monthInput.value).toBe(testDate.month);
+  expect(yearInput.value).toBe(testDate.year);
 });
 
 it('failure post - rejcted', async () => {
@@ -314,13 +337,13 @@ it('failure post - rejcted', async () => {
   expect(postFormMock).toHaveBeenCalledTimes(1);
 
   return waitFor(() => {
-    return expect(screen.getByText('FAILURE')).toBeInTheDocument();
+    return expect(screen.getByText('There was an error, sorry')).toBeInTheDocument();
   });
 });
 
 
 it('missing first name - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -349,7 +372,7 @@ it('missing first name - post should not be called', async () => {
 });
 
 it('missing last name - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -377,7 +400,7 @@ it('missing last name - post should not be called', async () => {
 });
 
 it('missing email - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -407,7 +430,7 @@ it('missing email - post should not be called', async () => {
 });
 
 it('missing day - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -435,7 +458,7 @@ it('missing day - post should not be called', async () => {
 });
 
 it('missing month - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -463,7 +486,7 @@ it('missing month - post should not be called', async () => {
 });
 
 it('missing year - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
@@ -491,7 +514,7 @@ it('missing year - post should not be called', async () => {
 });
 
 it('invalid email address - post should not be called', async () => {
-  const { container, debug }  = renderEventFrom();
+  const { container }  = renderEventFrom();
 
   const {
     firstNameInput,
