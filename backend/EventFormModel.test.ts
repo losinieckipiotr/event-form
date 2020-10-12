@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import EventFormModel from './EventFormModel';
+import EventFormModel from './src/EventFormModel';
 
 const MONGO_URL = process.env.MONGO_URL as string;
 

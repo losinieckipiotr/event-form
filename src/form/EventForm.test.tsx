@@ -1,7 +1,3 @@
-import '@testing-library/jest-dom';
-import '@testing-library/jest-dom/extend-expect';
-import 'jest-canvas-mock';
-
 import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import EventFormModel from './EventFormModel';
 
 export function insertOne(firstName : string, lastName: string, email: string, date: Date) {
-  // const url = 'mongodb://superuser:123456789@localhost:27017/admin';
   const url = process.env.DB_URL;
   if (url === undefined) {
     throw new Error('Missing DB URL');

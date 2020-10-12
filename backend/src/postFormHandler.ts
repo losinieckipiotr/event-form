@@ -1,29 +1,6 @@
-import bodyParser from 'body-parser';
-import { config } from 'dotenv';
 import { validate } from 'email-validator';
-import express from 'express';
-import path from 'path';
-
-// import { insertOne } from './data';
+import { Request, Response } from 'express';
 import { insertOne } from './data2';
-
-const result = config();
-
-if (result.error) {
-  throw result.error
-}
-
-console.log('Config:', result.parsed);
-
-const app = express();
-
-// parse application/json
-app.use(bodyParser.json())
-
-// use in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '..', 'build')));
-}
 
 function notEmpty(v: string) {
   return v !== ''
@@ -31,7 +8,7 @@ function notEmpty(v: string) {
 
 const isValidEmail = validate;
 
-app.post('/api/postForm', function (req, res) {
+export default function postFormHandler(req: Request, res: Response) {
   console.log('request', req.body);
 
   const {
@@ -66,14 +43,4 @@ app.post('/api/postForm', function (req, res) {
     res.contentType('application/json');
     res.send(JSON.stringify({result: "ERROR"}));
   }
-});
-
-const port = Number(process.env.SERVER_PORT);
-
-if (isNaN(port)) {
-  throw new Error('Invalid SERVER_PORT');
 }
-
-app.listen(port);
-
-console.log('Server is up, listening on port %s', port);
