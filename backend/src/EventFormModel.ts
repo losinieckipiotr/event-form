@@ -1,10 +1,13 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface IEventForm extends Document {
+export interface EventFormData {
   firstName: string;
   lastName: string;
   email: string;
   date: Date;
+}
+
+export interface IEventForm extends EventFormData, Document {
 }
 
 // Create a simple User's schema

@@ -1,14 +1,16 @@
 import { validate } from 'email-validator';
 import { Request, Response } from 'express';
-import { insertOne } from './data2';
+import insertOne from './insertOne';
 
-function notEmpty(v: string) {
-  return v !== ''
+function notEmptyString(v: any): boolean {
+  return typeof v === 'string' && v !== '';
 }
 
-const isValidEmail = validate;
+const isValidEmail = (v: any): boolean => {
+  return typeof v === 'string' ? validate(v) : false;
+};
 
-export default function postFormHandler(req: Request, res: Response) {
+export default function postFormHandler(req: Request, res: Response, dbUrl: string): Promise<void> {
   console.log('request', req.body);
 
   const {
@@ -16,19 +18,26 @@ export default function postFormHandler(req: Request, res: Response) {
     lastName,
     email,
     date,
+    // note: additional values will be skipped
   } = req.body;
-
   const parsedDate = new Date(date);
 
+  // TODO change this validation to custom moongose validator
+  // https://mongoosejs.com/docs/validation.html#custom-validators
   const valid = [
-    notEmpty(firstName),
-    notEmpty(lastName),
+    notEmptyString(firstName),
+    notEmptyString(lastName),
     isValidEmail(email),
     !Number.isNaN(parsedDate.getTime()),
   ].reduce((p, c) => p && c);
 
   if (valid) {
-    insertOne(firstName, lastName, email, parsedDate)
+    return insertOne({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      date: parsedDate,
+    }, dbUrl)
     .then(() => {
       res.contentType('application/json');
       res.send(JSON.stringify({result: "OK" }));
@@ -42,5 +51,6 @@ export default function postFormHandler(req: Request, res: Response) {
     console.error('Invalid request');
     res.contentType('application/json');
     res.send(JSON.stringify({result: "ERROR"}));
+    return Promise.resolve();
   }
 }

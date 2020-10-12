@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import EventFormModel from './src/EventFormModel';
+import EventFormModel from './EventFormModel';
 
 const MONGO_URL = process.env.MONGO_URL as string;
 
@@ -15,6 +15,7 @@ afterAll(async () => {
   await db.close();
 });
 
+// TODO refactoring
 const testDate = {
   day: '2',
   month: '10',
